@@ -181,10 +181,7 @@ export default {
         ],
         profissionais: [
           { id: 'nome', label: 'Nome', type: 'text', required: true },
-          { id: 'especialidade', label: 'Especialidade', type: 'text', required: true },
-          { id: 'crefito', label: 'CREFITO', type: 'text', required: true },
-          { id: 'email', label: 'Email', type: 'email', required: true },
-          { id: 'telefone', label: 'Telefone', type: 'tel', required: true }
+          { id: 'especialidade', label: 'Especialidade', type: 'text', required: true }
         ],
         pacientes: [
           { id: 'nome', label: 'Nome', type: 'text', required: true },

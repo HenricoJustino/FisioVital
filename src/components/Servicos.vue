@@ -59,55 +59,43 @@ export default {
   data() {
     return {
       servicos: [],
-      carregando: true,
-      erro: null,
-      debug: true // Habilita informações de debug
+      carregando: false,
+      erro: null
     }
   },
   methods: {
     formatarPreco(preco) {
       return preco ? Number(preco).toFixed(2) : '0.00';
     },
-    agendar(servico) {
-      alert(`Agendamento para ${servico.nome}`);
-      // Aqui você pode implementar a lógica de agendamento
-    },
     async carregarServicos() {
       this.carregando = true;
       this.erro = null;
-      
+
       try {
-        console.log('Iniciando carregamento dos serviços...');
         const response = await fetch('http://localhost:3000/api/servicos');
-        
         if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
+          throw new Error('Erro ao carregar serviços');
         }
-
         const data = await response.json();
-        console.log('Dados recebidos do backend:', data);
-
-        if (!Array.isArray(data)) {
-          throw new Error('Dados recebidos não são um array');
-        }
-
-        this.servicos = data.map(servico => ({
-          ...servico,
-          preco: Number(servico.preco),
-          duracao: Number(servico.duracao)
-        }));
-
-        console.log('Total de serviços carregados:', this.servicos.length);
+        this.servicos = data;
       } catch (error) {
         console.error('Erro ao carregar serviços:', error);
-        this.erro = `Erro ao carregar serviços: ${error.message}`;
+        this.erro = 'Erro ao carregar serviços. Por favor, tente novamente mais tarde.';
       } finally {
         this.carregando = false;
       }
+    },
+    handleAgendamento() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        this.$router.push('/login');
+      } else {
+        this.$router.push('/agendamento');
+      }
     }
   },
-  async created() {
-    await this.carregarServicos();
+  created() {
+    this.carregarServicos();
   }
 }
 </script>

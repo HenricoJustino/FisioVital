@@ -4,7 +4,9 @@
       <div class="hero-content">
         <h1>Bem-vindo à FisioVital</h1>
         <p class="hero-subtitle">Sua saúde em primeiro lugar</p>
-        <button class="cta-button" @click="$router.push('/agendamento')">Agende sua consulta</button>
+        <button @click="handleAgendamento" class="btn-agendar">
+          Agende sua consulta
+        </button>
       </div>
     </section>
 
@@ -102,7 +104,7 @@ export default {
   data() {
     return {
       profissionais: [],
-      carregando: true,
+      carregando: false,
       erro: null
     }
   },
@@ -110,26 +112,32 @@ export default {
     async carregarProfissionais() {
       this.carregando = true;
       this.erro = null;
-      
+
       try {
         const response = await fetch('http://localhost:3000/api/profissionais');
-        
         if (!response.ok) {
-          throw new Error(`Erro HTTP: ${response.status}`);
+          throw new Error('Erro ao carregar profissionais');
         }
-
         const data = await response.json();
         this.profissionais = data;
       } catch (error) {
         console.error('Erro ao carregar profissionais:', error);
-        this.erro = `Erro ao carregar profissionais: ${error.message}`;
+        this.erro = 'Erro ao carregar profissionais. Por favor, tente novamente mais tarde.';
       } finally {
         this.carregando = false;
       }
+    },
+    handleAgendamento() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        this.$router.push('/login');
+      } else {
+        this.$router.push('/agendamento');
+      }
     }
   },
-  async created() {
-    await this.carregarProfissionais();
+  created() {
+    this.carregarProfissionais();
   }
 }
 </script>
@@ -169,22 +177,20 @@ export default {
   opacity: 0.9;
 }
 
-.cta-button {
-  background-color: #42b983;
+.btn-agendar {
+  background-color: #28a745;
   color: white;
   border: none;
-  padding: 1rem 2.5rem;
-  font-size: 1.2rem;
-  border-radius: 50px;
+  padding: 1rem 2rem;
+  border-radius: 5px;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
+  transition: background-color 0.3s;
+  margin-top: 1rem;
 }
 
-.cta-button:hover {
-  background-color: #3aa876;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(66, 185, 131, 0.3);
+.btn-agendar:hover {
+  background-color: #218838;
 }
 
 .container {

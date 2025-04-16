@@ -45,48 +45,6 @@
         </select>
       </div>
 
-      <div class="form-group">
-        <label for="nome">Nome Completo</label>
-        <input 
-          type="text" 
-          id="nome" 
-          v-model="formData.nome" 
-          required
-          placeholder="Digite seu nome completo"
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="telefone">Telefone</label>
-        <input 
-          type="tel" 
-          id="telefone" 
-          v-model="formData.telefone" 
-          required
-          placeholder="(00) 00000-0000"
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email</label>
-        <input 
-          type="email" 
-          id="email" 
-          v-model="formData.email" 
-          required
-          placeholder="seu@email.com"
-        >
-      </div>
-
-      <div class="form-group">
-        <label for="historico">Histórico Médico</label>
-        <textarea 
-          id="historico" 
-          v-model="formData.historico" 
-          placeholder="Descreva seu histórico médico e motivo da consulta"
-        ></textarea>
-      </div>
-
       <button type="submit" class="submit-button" :disabled="enviando">
         {{ enviando ? 'Agendando...' : 'Confirmar Agendamento' }}
       </button>
@@ -107,12 +65,14 @@ export default {
         data: '',
         hora: '',
         profissional_id: '',
+        paciente_id: '',
         nome: '',
         telefone: '',
         email: '',
         historico: ''
       },
       profissionais: [],
+      horarios: [],
       enviando: false,
       mensagem: null
     }
@@ -123,8 +83,25 @@ export default {
       return hoje.toISOString().split('T')[0];
     }
   },
-  async created() {
-    await this.carregarProfissionais();
+  created() {
+    // Verificar se o usuário está logado
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.$router.push('/login');
+      return;
+    }
+
+    // Carregar dados do usuário logado
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    if (userData) {
+      this.formData.paciente_id = userData.id;
+      this.formData.nome = userData.nome;
+      this.formData.email = userData.email;
+      this.formData.telefone = userData.telefone;
+    }
+
+    this.carregarProfissionais();
+    this.carregarHorarios();
   },
   methods: {
     async carregarProfissionais() {
@@ -140,44 +117,53 @@ export default {
         };
       }
     },
+    async carregarHorarios() {
+      try {
+        const response = await fetch('http://localhost:3000/api/horarios');
+        if (!response.ok) throw new Error('Erro ao carregar horários');
+        this.horarios = await response.json();
+      } catch (error) {
+        console.error('Erro:', error);
+        this.mensagem = {
+          tipo: 'erro',
+          texto: 'Erro ao carregar horários disponíveis. Por favor, tente novamente.'
+        };
+      }
+    },
     async agendarConsulta() {
       this.enviando = true;
       this.mensagem = null;
 
       try {
-        // Primeiro, cadastra o paciente
-        const pacienteResponse = await fetch('http://localhost:3000/api/pacientes', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            nome: this.formData.nome,
-            telefone: this.formData.telefone,
-            email: this.formData.email,
-            historico: this.formData.historico
-          })
-        });
-
+        // Buscar o histórico do paciente
+        const pacienteResponse = await fetch(`http://localhost:3000/api/pacientes/${this.formData.paciente_id}`);
         if (!pacienteResponse.ok) {
-          throw new Error('Erro ao cadastrar paciente');
+          if (pacienteResponse.status === 404) {
+            throw new Error('Paciente não encontrado. Por favor, faça login novamente.');
+          }
+          throw new Error('Erro ao buscar dados do paciente');
         }
+        const pacienteData = await pacienteResponse.json();
 
-        // Depois, agenda o horário
-        const horarioResponse = await fetch('http://localhost:3000/api/horarios', {
+        // Criar o agendamento
+        const agendamentoResponse = await fetch('http://localhost:3000/api/agendamentos', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
           body: JSON.stringify({
+            paciente_id: this.formData.paciente_id,
+            profissional_id: this.formData.profissional_id,
             data: this.formData.data,
             hora: this.formData.hora,
-            profissional_id: this.formData.profissional_id
+            historico: pacienteData.historico || ''
           })
         });
 
-        if (!horarioResponse.ok) {
-          throw new Error('Erro ao agendar horário');
+        if (!agendamentoResponse.ok) {
+          const errorData = await agendamentoResponse.json();
+          throw new Error(errorData.details || 'Erro ao criar agendamento');
         }
 
         this.mensagem = {
@@ -190,9 +176,10 @@ export default {
           data: '',
           hora: '',
           profissional_id: '',
-          nome: '',
-          telefone: '',
-          email: '',
+          paciente_id: this.formData.paciente_id,
+          nome: this.formData.nome,
+          telefone: this.formData.telefone,
+          email: this.formData.email,
           historico: ''
         };
 
@@ -205,7 +192,7 @@ export default {
         console.error('Erro:', error);
         this.mensagem = {
           tipo: 'erro',
-          texto: 'Erro ao realizar agendamento. Por favor, tente novamente.'
+          texto: error.message || 'Erro ao realizar agendamento. Por favor, tente novamente.'
         };
       } finally {
         this.enviando = false;
