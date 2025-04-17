@@ -8,9 +8,9 @@ const jwt = require('jsonwebtoken');
 const app = express();
 const port = 3000;
 
-// Configurações do CORS
+// Configurações do CORS - Ajustado para desenvolvimento
 app.use(cors({
-  origin: ['http://localhost:8081', 'http://localhost:8081'], // URLs do seu frontend
+  origin: '*', // Permite todas as origens durante desenvolvimento
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -29,9 +29,20 @@ const pool = mysql.createPool({
   queueLimit: 0
 });
 
-// Middleware para log de requisições
+// Teste de conexão e log de requisições
 app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
   next();
+});
+
+// Teste de conexão com o banco de dados
+pool.getConnection((err, connection) => {
+  if (err) {
+    console.error('❌ Erro ao conectar ao banco de dados:', err);
+    return;
+  }
+  console.log('✅ Conectado ao banco de dados MySQL com sucesso!');
+  connection.release();
 });
 
 // Rotas para Serviços

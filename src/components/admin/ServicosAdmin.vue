@@ -2,7 +2,13 @@
   <div class="servicos-admin">
     <h2>Gerenciar Serviços</h2>
     
-    <div class="form-container">
+    <div class="actions">
+      <button @click="showForm = true" class="btn-add" v-if="!showForm">
+        Adicionar Serviço
+      </button>
+    </div>
+
+    <div class="form-container" v-if="showForm">
       <h3>{{ modoEdicao ? 'Editar Serviço' : 'Adicionar Novo Serviço' }}</h3>
       <form @submit.prevent="salvarServico">
         <div class="form-group">
@@ -27,7 +33,7 @@
         
         <div class="form-actions">
           <button type="submit" class="btn-primary">{{ modoEdicao ? 'Atualizar' : 'Adicionar' }}</button>
-          <button type="button" class="btn-secondary" @click="cancelarEdicao" v-if="modoEdicao">Cancelar</button>
+          <button type="button" class="btn-secondary" @click="cancelarEdicao">Cancelar</button>
         </div>
       </form>
     </div>
@@ -67,102 +73,111 @@ export default {
   data() {
     return {
       servicos: [],
+      showForm: false,
+      modoEdicao: false,
       formData: {
-        id: null,
         nome: '',
         descricao: '',
         preco: '',
         duracao: ''
-      },
-      modoEdicao: false
+      }
     }
-  },
-  created() {
-    this.carregarServicos()
   },
   methods: {
     async carregarServicos() {
       try {
-        const response = await fetch('http://localhost:3000/api/servicos')
-        if (!response.ok) throw new Error('Erro ao carregar serviços')
-        this.servicos = await response.json()
+        const response = await fetch('http://localhost:3000/api/servicos');
+        if (!response.ok) throw new Error('Erro ao carregar serviços');
+        this.servicos = await response.json();
       } catch (error) {
-        console.error('Erro:', error)
-        alert('Erro ao carregar serviços')
+        console.error('Erro:', error);
+        alert('Erro ao carregar serviços');
       }
     },
     async salvarServico() {
       try {
         const url = this.modoEdicao 
           ? `http://localhost:3000/api/servicos/${this.formData.id}`
-          : 'http://localhost:3000/api/servicos'
+          : 'http://localhost:3000/api/servicos';
         
-        const method = this.modoEdicao ? 'PUT' : 'POST'
+        const method = this.modoEdicao ? 'PUT' : 'POST';
         
         const response = await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify({
-            ...this.formData,
-            preco: Number(this.formData.preco)
-          })
-        })
+          body: JSON.stringify(this.formData)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar serviço');
         
-        if (!response.ok) throw new Error('Erro ao salvar serviço')
-        
-        await this.carregarServicos()
-        this.limparFormulario()
-        alert('Serviço salvo com sucesso!')
+        await this.carregarServicos();
+        this.cancelarEdicao();
       } catch (error) {
-        console.error('Erro:', error)
-        alert('Erro ao salvar serviço')
+        console.error('Erro:', error);
+        alert('Erro ao salvar serviço');
       }
     },
     editarServico(servico) {
-      this.formData = { ...servico }
-      this.modoEdicao = true
-    },
-    cancelarEdicao() {
-      this.limparFormulario()
+      this.modoEdicao = true;
+      this.formData = { ...servico };
+      this.showForm = true;
     },
     async excluirServico(id) {
-      if (!confirm('Tem certeza que deseja excluir este serviço?')) return
+      if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
       
       try {
         const response = await fetch(`http://localhost:3000/api/servicos/${id}`, {
           method: 'DELETE'
-        })
+        });
+
+        if (!response.ok) throw new Error('Erro ao excluir serviço');
         
-        if (!response.ok) throw new Error('Erro ao excluir serviço')
-        
-        await this.carregarServicos()
-        alert('Serviço excluído com sucesso!')
+        await this.carregarServicos();
       } catch (error) {
-        console.error('Erro:', error)
-        alert('Erro ao excluir serviço')
+        console.error('Erro:', error);
+        alert('Erro ao excluir serviço');
       }
     },
-    limparFormulario() {
+    cancelarEdicao() {
+      this.modoEdicao = false;
+      this.showForm = false;
       this.formData = {
-        id: null,
         nome: '',
         descricao: '',
         preco: '',
         duracao: ''
-      }
-      this.modoEdicao = false
+      };
     }
+  },
+  created() {
+    this.carregarServicos();
   }
 }
 </script>
 
 <style scoped>
 .servicos-admin {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 2rem;
+}
+
+.actions {
+  margin-bottom: 2rem;
+}
+
+.btn-add {
+  background-color: #42b983;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-add:hover {
+  background-color: #3aa876;
 }
 
 .form-container {
@@ -177,22 +192,18 @@ export default {
   margin-bottom: 1rem;
 }
 
-label {
+.form-group label {
   display: block;
   margin-bottom: 0.5rem;
-  color: #2c3e50;
+  font-weight: 600;
 }
 
-input, textarea {
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-}
-
-textarea {
-  min-height: 100px;
-  resize: vertical;
 }
 
 .form-actions {
@@ -201,22 +212,22 @@ textarea {
   margin-top: 1rem;
 }
 
-.btn-primary {
-  background-color: #42b983;
-  color: white;
-  padding: 0.75rem 1.5rem;
+.btn-primary,
+.btn-secondary {
+  padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
 }
 
+.btn-primary {
+  background-color: #42b983;
+  color: white;
+}
+
 .btn-secondary {
   background-color: #6c757d;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
 .servicos-list {
@@ -229,23 +240,26 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
 }
 
 th, td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #eee;
 }
 
-th {
-  background-color: #f8f9fa;
-  color: #2c3e50;
+.btn-edit,
+.btn-delete {
+  padding: 0.25rem 0.5rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 0.5rem;
 }
 
 .btn-edit {
-  background-color: #ffc107;
-  color: #212529;
+  background-color: #007bff;
+  color: white;
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;

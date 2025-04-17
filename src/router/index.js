@@ -19,7 +19,6 @@ const routes = [
         component: AdminPanel,
         meta: { requiresAuth: true, requiresAdmin: true },
         children: [
-            { path: '', name: 'AdminDashboard', component: AdminPanel },
             { path: 'servicos', name: 'ServicosAdmin', component: ServicosAdmin },
             { path: 'profissionais', name: 'ProfissionaisAdmin', component: ProfissionaisAdmin },
             { path: 'pacientes', name: 'PacientesAdmin', component: PacientesAdmin },
