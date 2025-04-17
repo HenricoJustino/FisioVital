@@ -169,8 +169,8 @@ export default {
 .btn-add {
   background-color: #42b983;
   color: white;
+  padding: 0.75rem 1.5rem;
   border: none;
-  padding: 0.5rem 1rem;
   border-radius: 4px;
   cursor: pointer;
   font-size: 1rem;
