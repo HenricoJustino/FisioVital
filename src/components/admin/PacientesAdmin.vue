@@ -1,9 +1,9 @@
 <template>
-  <div class="admin-content">
+  <div class="pacientes-admin">
     <h2>Gerenciar Pacientes</h2>
     
     <div class="actions">
-      <button @click="showForm = true" class="btn-add">Adicionar Paciente</button>
+      <button @click="showForm = true" class="btn-add" v-if="!showForm">Adicionar Paciente</button>
     </div>
 
     <div v-if="showForm" class="form-container">
@@ -30,13 +30,14 @@
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn-save">Salvar</button>
-          <button type="button" @click="cancelForm" class="btn-cancel">Cancelar</button>
+          <button type="submit" class="btn-primary">Salvar</button>
+          <button type="button" @click="cancelForm" class="btn-secondary">Cancelar</button>
         </div>
       </form>
     </div>
 
-    <div class="table-container">
+    <div class="pacientes-list">
+      <h3>Lista de Pacientes</h3>
       <table>
         <thead>
           <tr>
@@ -150,8 +151,10 @@ export default {
 </script>
 
 <style scoped>
-.admin-content {
+.pacientes-admin {
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .actions {
@@ -193,10 +196,9 @@ export default {
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 0.75rem;
+  padding: 0.5rem;
   border: 1px solid #ddd;
   border-radius: 4px;
-  font-size: 1rem;
 }
 
 .form-actions {
@@ -205,63 +207,131 @@ export default {
   margin-top: 1rem;
 }
 
-.btn-save {
+.btn-primary,
+.btn-secondary {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary {
   background-color: #42b983;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.btn-cancel {
-  background-color: #dc3545;
+.btn-secondary {
+  background-color: #6c757d;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
 }
 
-.table-container {
+.pacientes-list {
   background: white;
+  padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 600px; /* Garante largura mínima para legibilidade */
 }
 
 th, td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #eee;
 }
 
-th {
-  background-color: #f8f9fa;
-  font-weight: 600;
-}
-
-.btn-edit {
-  background-color: #007bff;
-  color: white;
-  padding: 0.5rem 1rem;
+.btn-edit,
+.btn-delete {
+  padding: 0.25rem 0.5rem;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   margin-right: 0.5rem;
 }
 
+.btn-edit {
+  background-color: #007bff;
+  color: white;
+}
+
 .btn-delete {
   background-color: #dc3545;
   color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .pacientes-admin {
+    padding: 1rem;
+  }
+
+  .form-container {
+    padding: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .pacientes-list {
+    padding: 1rem;
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+
+  th, td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pacientes-admin {
+    padding: 1.5rem;
+  }
+
+  .form-container,
+  .pacientes-list {
+    padding: 1.5rem;
+  }
+
+  th, td {
+    padding: 0.8rem;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  .pacientes-admin {
+    padding: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-add {
+    width: 100%;
+    text-align: center;
+  }
 }
 </style> 

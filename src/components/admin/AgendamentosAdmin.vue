@@ -409,12 +409,14 @@ select, input {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
+  min-width: 800px; /* Garante largura mínima para legibilidade */
 }
 
 th, td {
@@ -504,5 +506,94 @@ textarea {
 
 .btn-save:hover {
   background-color: #218838;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .agendamentos-admin {
+    padding: 1rem;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .btn-add {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .filtros {
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .agendamentos-list {
+    padding: 1rem;
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+
+  th, td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  textarea {
+    min-height: 60px;
+  }
+
+  .modal-content {
+    padding: 1rem;
+    width: 95%;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-save,
+  .btn-cancel {
+    width: 100%;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .agendamentos-admin {
+    padding: 1.5rem;
+  }
+
+  .filtros,
+  .agendamentos-list {
+    padding: 1.5rem;
+  }
+
+  th, td {
+    padding: 0.8rem;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  .agendamentos-admin {
+    padding: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .filtros {
+    padding: 0.75rem;
+  }
+
+  select, input {
+    font-size: 0.9rem;
+  }
 }
 </style> 

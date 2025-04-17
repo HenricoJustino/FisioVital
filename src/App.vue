@@ -32,9 +32,4 @@ export default {
   background-color: #f5f5f5;
 }
 
-@media (max-width: 768px) {
-  #app {
-    padding-top: 60px;
-  }
-}
 </style>

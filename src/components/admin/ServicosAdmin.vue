@@ -68,91 +68,122 @@
 </template>
 
 <script>
+import { ref, onMounted, onUnmounted } from 'vue'
+
 export default {
   name: 'ServicosAdmin',
-  data() {
-    return {
-      servicos: [],
-      showForm: false,
-      modoEdicao: false,
-      formData: {
-        nome: '',
-        descricao: '',
-        preco: '',
-        duracao: ''
+  setup() {
+    const servicos = ref([])
+    const showForm = ref(false)
+    const modoEdicao = ref(false)
+    const formData = ref({
+      nome: '',
+      descricao: '',
+      preco: '',
+      duracao: ''
+    })
+
+    const carregarServicos = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/servicos')
+        if (!response.ok) throw new Error('Erro ao carregar serviços')
+        servicos.value = await response.json()
+      } catch (error) {
+        console.error('Erro:', error)
+        alert('Erro ao carregar serviços')
       }
     }
-  },
-  methods: {
-    async carregarServicos() {
+
+    const salvarServico = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/servicos');
-        if (!response.ok) throw new Error('Erro ao carregar serviços');
-        this.servicos = await response.json();
-      } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao carregar serviços');
-      }
-    },
-    async salvarServico() {
-      try {
-        const url = this.modoEdicao 
-          ? `http://localhost:3000/api/servicos/${this.formData.id}`
-          : 'http://localhost:3000/api/servicos';
+        const url = modoEdicao.value
+          ? `http://localhost:3000/api/servicos/${formData.value.id}`
+          : 'http://localhost:3000/api/servicos'
         
-        const method = this.modoEdicao ? 'PUT' : 'POST';
+        const method = modoEdicao.value ? 'PUT' : 'POST'
         
         const response = await fetch(url, {
           method,
           headers: {
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(this.formData)
-        });
+          body: JSON.stringify(formData.value)
+        })
 
-        if (!response.ok) throw new Error('Erro ao salvar serviço');
+        if (!response.ok) throw new Error('Erro ao salvar serviço')
         
-        await this.carregarServicos();
-        this.cancelarEdicao();
+        await carregarServicos()
+        cancelarEdicao()
       } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao salvar serviço');
+        console.error('Erro:', error)
+        alert('Erro ao salvar serviço')
       }
-    },
-    editarServico(servico) {
-      this.modoEdicao = true;
-      this.formData = { ...servico };
-      this.showForm = true;
-    },
-    async excluirServico(id) {
-      if (!confirm('Tem certeza que deseja excluir este serviço?')) return;
+    }
+
+    const editarServico = (servico) => {
+      modoEdicao.value = true
+      formData.value = { ...servico }
+      showForm.value = true
+    }
+
+    const excluirServico = async (id) => {
+      if (!confirm('Tem certeza que deseja excluir este serviço?')) return
       
       try {
         const response = await fetch(`http://localhost:3000/api/servicos/${id}`, {
           method: 'DELETE'
-        });
+        })
 
-        if (!response.ok) throw new Error('Erro ao excluir serviço');
+        if (!response.ok) throw new Error('Erro ao excluir serviço')
         
-        await this.carregarServicos();
+        await carregarServicos()
       } catch (error) {
-        console.error('Erro:', error);
-        alert('Erro ao excluir serviço');
+        console.error('Erro:', error)
+        alert('Erro ao excluir serviço')
       }
-    },
-    cancelarEdicao() {
-      this.modoEdicao = false;
-      this.showForm = false;
-      this.formData = {
+    }
+
+    const cancelarEdicao = () => {
+      modoEdicao.value = false
+      showForm.value = false
+      formData.value = {
         nome: '',
         descricao: '',
         preco: '',
         duracao: ''
-      };
+      }
     }
-  },
-  created() {
-    this.carregarServicos();
+
+    // Handler para eventos de autenticação
+    const handleAuthChange = (event) => {
+      if (event.detail.isLoggedIn && event.detail.isAdmin) {
+        carregarServicos()
+      }
+    }
+
+    onMounted(() => {
+      carregarServicos()
+      // Adicionar listener para eventos de autenticação
+      window.addEventListener('auth-change', handleAuthChange)
+      window.addEventListener('login-success', handleAuthChange)
+    })
+
+    onUnmounted(() => {
+      // Remover listeners quando o componente for desmontado
+      window.removeEventListener('auth-change', handleAuthChange)
+      window.removeEventListener('login-success', handleAuthChange)
+    })
+
+    return {
+      servicos,
+      showForm,
+      modoEdicao,
+      formData,
+      salvarServico,
+      editarServico,
+      excluirServico,
+      cancelarEdicao
+    }
   }
 }
 </script>
@@ -160,6 +191,8 @@ export default {
 <style scoped>
 .servicos-admin {
   padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .actions {
@@ -235,11 +268,13 @@ export default {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow-x: auto; /* Permite rolagem horizontal em telas pequenas */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 600px; /* Garante largura mínima para legibilidade */
 }
 
 th, td {
@@ -260,19 +295,81 @@ th, td {
 .btn-edit {
   background-color: #007bff;
   color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 0.5rem;
 }
 
 .btn-delete {
   background-color: #dc3545;
   color: white;
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .servicos-admin {
+    padding: 1rem;
+  }
+
+  .form-container {
+    padding: 1rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+
+  .servicos-list {
+    padding: 1rem;
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+
+  th, td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-edit,
+  .btn-delete {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .servicos-admin {
+    padding: 1.5rem;
+  }
+
+  .form-container,
+  .servicos-list {
+    padding: 1.5rem;
+  }
+
+  th, td {
+    padding: 0.8rem;
+  }
+}
+
+/* Ajustes para telas muito pequenas */
+@media (max-width: 480px) {
+  .servicos-admin {
+    padding: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .btn-add {
+    width: 100%;
+    text-align: center;
+  }
 }
 </style> 

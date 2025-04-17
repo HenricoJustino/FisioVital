@@ -48,68 +48,80 @@
 </template>
 
 <script>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
 export default {
   name: 'Login',
-  data() {
-    return {
-      isAdmin: false,
-      formData: {
-        email: '',
-        senha: ''
-      },
-      enviando: false,
-      mensagem: null
-    }
-  },
-  methods: {
-    toggleModo() {
-      this.isAdmin = !this.isAdmin;
-      this.mensagem = null;
-    },
-    async handleLogin() {
-      this.enviando = true;
-      this.mensagem = null;
+  setup() {
+    const router = useRouter()
+    const isAdmin = ref(false)
+    const enviando = ref(false)
+    const mensagem = ref(null)
+    const formData = ref({
+      email: '',
+      senha: ''
+    })
 
+    const handleLogin = async () => {
       try {
+        enviando.value = true
+        mensagem.value = null
+
         const response = await fetch('http://localhost:3000/api/login', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            email: this.formData.email,
-            senha: this.formData.senha
+            email: formData.value.email,
+            senha: formData.value.senha,
+            isAdmin: isAdmin.value
           })
-        });
+        })
 
-        const data = await response.json();
+        const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.error || 'Credenciais inválidas');
+          throw new Error(data.error || 'Erro ao fazer login')
         }
-        
-        // Salvar token e dados do usuário
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userData', JSON.stringify(data.user));
 
-        this.mensagem = {
-          tipo: 'sucesso',
-          texto: 'Login realizado com sucesso!'
-        };
+        // Salvar dados do usuário
+        localStorage.setItem('token', data.token)
+        localStorage.setItem('userData', JSON.stringify(data.user))
 
-        // Redirecionar após 1 segundo
-        setTimeout(() => {
-          this.$router.push('/');
-        }, 1000);
+        // Emitir evento de login bem-sucedido
+        window.dispatchEvent(new CustomEvent('login-success', {
+          detail: { user: data.user }
+        }))
 
+        // Redirecionar
+        if (data.user.tipo === 'admin') {
+          router.push('/admin')
+        } else {
+          router.push('/')
+        }
       } catch (error) {
-        this.mensagem = {
+        mensagem.value = {
           tipo: 'erro',
-          texto: error.message || 'Erro ao fazer login. Por favor, tente novamente.'
-        };
+          texto: error.message
+        }
       } finally {
-        this.enviando = false;
+        enviando.value = false
       }
+    }
+
+    const toggleModo = () => {
+      isAdmin.value = !isAdmin.value
+    }
+
+    return {
+      isAdmin,
+      enviando,
+      mensagem,
+      formData,
+      handleLogin,
+      toggleModo
     }
   }
 }
